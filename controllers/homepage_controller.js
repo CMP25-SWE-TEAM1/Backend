@@ -29,6 +29,7 @@ exports.getFollowingTweets = catchAsync(
     followingUsers.forEach((followingUser) =>
       tweets.push(...followingUser.tweetList),
     );
+    req.query.type = 'array';
     const apiFeatures = new APIFeatures(tweets, req.query).sort().paginate();
     res.status(200).send(await apiFeatures.query);
   },
