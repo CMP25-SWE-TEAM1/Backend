@@ -2,11 +2,10 @@ const mongoose = require('mongoose');
 const Tweet = require('../models/tweet_model');
 const User = require('../models/user_model');
 const catchAsync = require('../utils/catchAsync');
+const APIFeatures = require('../utils/api_features');
 
 /**TODO:
- * 1 . add pagination
- * 2 . add sort
- * 3 . add auth
+ * 1 . add auth
  * */
 exports.getFollowingTweets = catchAsync(
   async (
@@ -30,6 +29,7 @@ exports.getFollowingTweets = catchAsync(
     followingUsers.forEach((followingUser) =>
       tweets.push(...followingUser.tweetList),
     );
-    res.status(200).send(tweets);
+    const apiFeatures = new APIFeatures(tweets, req.query).sort().paginate();
+    res.status(200).send(await apiFeatures.query);
   },
 );

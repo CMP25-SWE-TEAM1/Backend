@@ -1,3 +1,5 @@
+const skipAndLimit = require('./skip_limit');
+
 class APIFeatures {
   constructor(query, queryString) {
     this.query = query;
@@ -18,12 +20,22 @@ class APIFeatures {
     return this;
   }
 
+
+
   sort() {
     if (this.queryString.sort) {
       const sortBy = this.queryString.sort.split(',').join(' ');
-      this.query = this.query.sort(sortBy);
+      if (typeof this.query === 'object') {
+        this.query = this.sortByProperties(this.query, sortBy);
+      } else {
+        this.query = this.query.sort(sortBy);
+      }
     } else {
-      this.query = this.query.sort('-createdAt');
+      if (typeof this.query === 'object') {
+        this.query = this.query.sort((a, b) => a.createdAt - b.createdAt);
+      } else {
+        this.query = this.query.sort('-createdAt');
+      }
     }
 
     return this;
@@ -45,8 +57,14 @@ class APIFeatures {
     const limit = this.queryString.limit * 1 || 100;
     const skip = (page - 1) * limit;
 
-    this.query = this.query.skip(skip).limit(limit);
+    if (typeof this.query === 'object') {
+      const skippedArray = this.query.slice(skip);
+      const limitedArray = limit ? skippedArray.slice(0, limit) : skippedArray;
+      this.query = limitedArray;
+    } else {
+      this.query = this.query.skip(skip).limit(limit);
 
+    }
     return this;
   }
 }
