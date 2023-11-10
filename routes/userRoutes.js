@@ -17,4 +17,15 @@ router.post('/checkAvailableUsername', userController.checkAvailableUsername);
 router.post('/checkAvailableEmail', userController.checkAvailableEmail);
 router.post('/checkExistedEmail', userController.checkExistedEmail);
 
+// router.patch('/updateMe', authController.protect, userController.updateMe);
+// router.delete('/deleteMe', authController.protect, userController.deleteMe);
+//router.post('/forgotPassword', authController.forgotPassword);
+// router.patch(
+//   '/updateMyPassword',
+//   authController.protect,
+//   authController.updatePassword,
+// );
+//router.patch('/resetPassword/:token', authController.resetPassword);
+// /:the name of the variable we send with
+
 module.exports = router;
