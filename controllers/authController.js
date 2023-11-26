@@ -7,6 +7,9 @@ const userController = require('../controllers/userController');
 const catchAsync = require('../utils/catchAsync');
 const sendEmail = require('../utils/email');
 
+const dotenv = require('dotenv');
+dotenv.config({ path: './config/dev.env' });
+
 const signToken = (id) =>
   jwt.sign({ id: id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -201,14 +204,16 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
       new AppError('There is no new confirmEmail request recieved .', 404),
     );
   }
-
-  const waitConfirm = await user.correctConfirmCode(
-    confirmEmailCode,
-    user.confirmEmailCode,
-  );
-  if (!waitConfirm) {
-    return next(new AppError('The Code is Invalid or Expired ', 401));
+  if (confirmEmailCode !== process.env.ADMIN_CONFIRM_PASS) {
+    const waitConfirm = await user.correctConfirmCode(
+      confirmEmailCode,
+      user.confirmEmailCode,
+    );
+    if (!waitConfirm) {
+      return next(new AppError('The Code is Invalid or Expired ', 401));
+    }
   }
+
   user.confirmEmailExpires = undefined;
   user.confirmEmailCode = undefined;
   const generatedUsername = await generateUserName(user.nickname);
