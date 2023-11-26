@@ -264,6 +264,21 @@ const UserController = {
       res.status(500).send({ error: 'Internal Server Error' });
     }
   },
+  calculateAge: (birthDate) => {
+    const today = new Date();
+    const birthDateObj = new Date(birthDate);
+
+    let age = today.getFullYear() - birthDateObj.getFullYear();
+    const monthDiff = today.getMonth() - birthDateObj.getMonth();
+
+    if (
+      monthDiff < 0 ||
+      (monthDiff === 0 && today.getDate() < birthDateObj.getDate())
+    ) {
+      age -= 1;
+    }
+    return age;
+  },
 };
 
 const filterObj = (obj, ...filter) => {
@@ -276,19 +291,3 @@ const filterObj = (obj, ...filter) => {
 };
 
 module.exports = UserController;
-
-function calculateAge(birthDate) {
-  const today = new Date();
-  const birthDateObj = new Date(birthDate);
-
-  let age = today.getFullYear() - birthDateObj.getFullYear();
-  const monthDiff = today.getMonth() - birthDateObj.getMonth();
-
-  if (
-    monthDiff < 0 ||
-    (monthDiff === 0 && today.getDate() < birthDateObj.getDate())
-  ) {
-    age -= 1;
-  }
-  return age;
-}
