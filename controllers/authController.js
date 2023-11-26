@@ -3,6 +3,7 @@ const uniqueSlug = require('unique-slug');
 const { promisify } = require('util'); //util.promisify
 const AppError = require('../utils/appError');
 const User = require('../models/user_model');
+const userController = require('../controllers/userController');
 const catchAsync = require('../utils/catchAsync');
 const sendEmail = require('../utils/email');
 
@@ -27,6 +28,48 @@ const generateUserName = async (nickname) => {
 };
 
 exports.signUp = catchAsync(async (req, res, next) => {
+  // 1) Check data recieved
+  const { email, nickname, birthDate } = req.body;
+
+  // 1.1) check email
+  if (!email) {
+    return res
+      .status(400)
+      .json({ error: 'Email is required in the request body' });
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+  const existingUser = await User.findOne({ email });
+
+  if (existingUser && existingUser.active) {
+    return res.status(409).json({ error: 'Email already exists' });
+  } else if (existingUser && !existingUser.active) {
+    // if the user is not active we will delete the user to avoid duplicate in db
+    await User.deleteOne({ email });
+  }
+
+  // 1.2) check birthDate
+  if (!birthDate) {
+    return res
+      .status(400)
+      .json({ error: 'birthDate is required in the request body' });
+  }
+  const userAge = userController.calculateAge(birthDate);
+  if (userAge < 13) {
+    res.status(403).json({
+      error: 'User must be at least 13 years old Or Wrong date Format ',
+    });
+  }
+
+  // 1.3) check nickName
+  if (!nickname) {
+    return res
+      .status(400)
+      .json({ error: 'nickName is required in the request body' });
+  }
 
   const newUser = await User.create({
     email: req.body.email,
@@ -37,10 +80,10 @@ exports.signUp = catchAsync(async (req, res, next) => {
   // 2) Generate random code
   const confirmCode = newUser.createConfirmCode();
   await newUser.save({ validateBeforeSave: false });
- 
 
   const message = `Your confirm Code is ${confirmCode}`;
 
+  // 3) Sending email
   try {
     await sendEmail({
       email: req.body.email,
@@ -55,12 +98,10 @@ exports.signUp = catchAsync(async (req, res, next) => {
         message: 'Code sent to the email the user provide',
       },
     });
-    
   } catch (err) {
     newUser.confirmEmailCode = undefined;
     newUser.confirmEmailExpires = undefined;
     await newUser.save({ validateBeforeSave: false });
-
     return next(
       new AppError('There was an error sending the email. Try again later!'),
       500,
