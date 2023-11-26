@@ -22,3 +22,8 @@ router.get("/login/failed", (req, res) => {
         message: "failure",
     });
 });
+
+router.get("/logout", (req, res) => {
+    req.logout();
+    res.redirect(CLIENT_URL);
+});
