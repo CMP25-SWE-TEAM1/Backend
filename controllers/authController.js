@@ -25,7 +25,6 @@ const generateUserName = async (nickname) => {
 
   return finalUsername;
 };
-//testbranch......
 exports.signUp = catchAsync(async (req, res, next) => {
   const generatedUsername = await generateUserName(req.body.nickname);
   const newUser = await User.create({
