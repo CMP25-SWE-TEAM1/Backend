@@ -7,7 +7,6 @@ const DEFAULT_IMAGE_URL =
   'https://firebasestorage.googleapis.com/v0/b/gigachat-img.appspot.com/o/56931877-1025-4348-a329-663dadd37bba-black.jpg?alt=media&token=fca10f39-2996-4086-90db-0cd492a570f2';
 
 const UserController = {
-
   checkBirthDate: (req, res) => {
     const { birthDate } = req.body;
     if (!birthDate) {
@@ -16,7 +15,7 @@ const UserController = {
         .json({ error: 'birthDate is required in the request body' });
     }
     const userAge = calculateAge(birthDate);
-  
+
     if (userAge >= 13) {
       res.json({ message: 'User is above 13 years old.' });
     } else {
@@ -28,60 +27,60 @@ const UserController = {
 
   checkAvailableUsername: catchAsync(async (req, res, next) => {
     const { username } = req.body;
-  
+
     if (!username) {
       return res
         .status(400)
         .json({ error: 'Username is required in the request body' });
     }
-  
+
     const existingUser = await User.findOne({ username });
-  
+
     if (existingUser) {
       return res.status(409).json({ error: 'Username already exists' });
     }
-  
+
     res.status(200).json({ message: 'Username is available' });
   }),
 
   checkAvailableEmail: catchAsync(async (req, res, next) => {
     const { email } = req.body;
-  
+
     if (!email) {
       return res
         .status(400)
         .json({ error: 'Email is required in the request body' });
     }
-  
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  
+
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: 'Invalid email format' });
     }
     const existingUser = await User.findOne({ email });
-  
-    if (existingUser) {
+
+    if (existingUser && existingUser.active) {
       return res.status(409).json({ error: 'Email already exists' });
     }
-  
+
     res.status(200).json({ message: 'Email is available' });
   }),
 
   checkExistedEmail: catchAsync(async (req, res, next) => {
     const { email } = req.body;
-  
+
     if (!email) {
       return res
         .status(400)
         .json({ error: 'Email is required in the request body' });
     }
-  
+
     const existingUser = await User.findOne({ email });
-  
+
     if (existingUser) {
       return res.status(200).json({ message: 'Email is existed' });
     }
-  
+
     res.status(404).json({ error: 'Email is not existed' });
   }),
 
@@ -129,7 +128,8 @@ const UserController = {
       if (req.query.location) updatedProfileData.location = req.query.location;
       if (req.query.website) updatedProfileData.website = req.query.website;
       if (req.query.nickname) updatedProfileData.nickname = req.query.nickname;
-      if (req.query.birthDate) updatedProfileData.birthDate = req.query.birthDate;
+      if (req.query.birthDate)
+        updatedProfileData.birthDate = req.query.birthDate;
 
       if (Object.keys(updatedProfileData).length === 0)
         return res.status(400).send('Bad Request');
@@ -223,7 +223,6 @@ const UserController = {
 
   deleteProfileImage: async (req, res) => {
     try {
-
       const user = await User.findByIdAndUpdate(
         req.user._id,
         { profileImage: DEFAULT_IMAGE_URL },
@@ -246,7 +245,6 @@ const UserController = {
 
   deleteProfileBanner: async (req, res) => {
     try {
-
       const user = await User.findByIdAndUpdate(
         req.user._id,
         { profileBanner: DEFAULT_IMAGE_URL },
