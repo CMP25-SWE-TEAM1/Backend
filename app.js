@@ -8,6 +8,7 @@ const userRouter = require('./routes/userRoutes');
 const tweetRouter = require('./routes/tweetRoutes');
 const HomepageRouter = require('./routes/homepage_router');
 const HashtagRouter = require('./routes/hashtag_router');
+const googleauthRouter = require('./routes/googleauth_router');
 
 const app = express();
 
@@ -27,7 +28,7 @@ app.use((req, res, next) => {
 
 // Handling  Wrong Route Req.
 //Routs
-
+app.use('/api/user/googleauth', googleauthRouter)
 app.use('/api/user', userRouter);
 app.use('/api/homepage', HomepageRouter);
 app.use('/api/trends', HashtagRouter);
