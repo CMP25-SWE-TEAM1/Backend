@@ -113,18 +113,22 @@ exports.signUp = catchAsync(async (req, res, next) => {
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
 
   // 1) Check if email and password exist
-  if (!email || !password) {
-    return next(new AppError('Please provide email and password!', 400));
+  if (!password || (!email && !username)) {
+    return next(
+      new AppError('Please provide email or username and password!', 400),
+    );
   }
   // 2) Check if user exists && password is correct
-  const user = await User.findOne({ email }).select('+password'); //+ -> if the field we want is by default selece false -> select: false in the userModel
-
+  let user;
+  if (email) {
+    user = await User.findOne({ email }).select('+password');
+  } else {
+    user = await User.findOne({ username }).select('+password');
+  }
   if (!user || !(await user.correctPassword(password, user.password))) {
-    //.correctPassword -> instance method we declared in userModel and we can use it from any instance of User doc
-    //129 -> min 20 is so important
     return next(new AppError('Incorrect email or password', 401));
   }
 
@@ -134,7 +138,8 @@ exports.login = catchAsync(async (req, res, next) => {
     token,
     status: 'success',
     data: {
-      user: user,
+      userId: user.id,
+      username: user.username,
     },
   });
 });
@@ -360,11 +365,20 @@ exports.AssignPassword = catchAsync(async (req, res, next) => {
   }
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
 
-  const currentUser = await User.findById(decoded.id);
+  const currentUser = await User.findById(decoded.id).select('+password');
   if (!currentUser) {
     return next(
       new AppError(
         'The user belonging to this token does no longer exist.',
+        401,
+      ),
+    );
+  }
+
+  if (currentUser.password) {
+    return next(
+      new AppError(
+        'The user belonging to this token already have password.',
         401,
       ),
     );
@@ -380,7 +394,7 @@ exports.AssignPassword = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     data: {
-      currentUser,
+      message: ' user assign password correctly ',
     },
   });
 });
