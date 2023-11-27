@@ -195,8 +195,10 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
   }
   //const user = await User.findOne({ email,_bypassMiddleware:true }); //NOT WORKING YET to prevent the inacitve filter
   const user = await User.findOne({ email });
-  if (!user) {
-    return next(new AppError('There is no user with email this address.', 404));
+  if (!user || user.active) {
+    return next(
+      new AppError('There is no inactive user with  this email address.', 404),
+    );
   }
 
   if (!user.confirmEmailCode) {
@@ -224,7 +226,7 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
     token,
     status: 'success',
     data: {
-      user,
+      suggestedUsername: generatedUsername,
       message: 'Confirm done successfully',
     },
   });
@@ -237,11 +239,12 @@ exports.resendConfirmEmail = catchAsync(async (req, res, next) => {
   }
   console.log(email);
   const user = await User.findOne({ email });
-  if (!user) {
-    return next(new AppError('There is no user with email this address.', 404));
+  if (!user || user.active) {
+    return next(
+      new AppError('There is no inactive user with  this email address.', 404),
+    );
   }
 
-  // 2) Generate random code
   const confirmCode = user.createConfirmCode();
   await user.save({ validateBeforeSave: false });
 
