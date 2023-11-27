@@ -1,4 +1,6 @@
 const express = require('express');
+const cookieSession = require("cookie-session");
+
 const morgan = require('morgan');
 const cors = require('cors');
 require('./db/mongoose');
@@ -8,13 +10,22 @@ const userRouter = require('./routes/userRoutes');
 const tweetRouter = require('./routes/tweetRoutes');
 const HomepageRouter = require('./routes/homepage_router');
 const HashtagRouter = require('./routes/hashtag_router');
-const googleauthRouter = require('./routes/googleauth_router');
-
 const app = express();
+
+const passportSetup = require("./google-passport");
+const passport = require("passport");
+const authRoute = require("./routes/google_router");
 
 // MIDDLEWARES
 
-app.use(cors());
+app.use(
+    cors({
+        origin: "http://localhost:3001",
+        methods: "GET,POST,PUT,DELETE",
+        credentials: true,
+    })
+);
+
 
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
@@ -28,7 +39,22 @@ app.use((req, res, next) => {
 
 // Handling  Wrong Route Req.
 //Routs
-app.use('/api/user/googleauth', googleauthRouter)
+
+//region authgoogle
+
+app.use(
+    cookieSession({ name: "session", keys: ["google-auth"], maxAge: 24 * 60 * 60 * 100 })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+app.use("/auth", authRoute);
+
+
+//endregion
+
 app.use('/api/user', userRouter);
 app.use('/api/homepage', HomepageRouter);
 app.use('/api/trends', HashtagRouter);

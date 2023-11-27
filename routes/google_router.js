@@ -1,10 +1,7 @@
 const router = require("express").Router();
-const dotenv = require("dotenv");
-dotenv.config({ path: './config/dev.env' });
 const passport = require("passport");
 
-const CLIENT_URL = process.env.CLIENT_URL;
-
+const CLIENT_URL = "http://localhost:3001";
 
 router.get("/login/success", (req, res) => {
     if (req.user) {
@@ -12,6 +9,7 @@ router.get("/login/success", (req, res) => {
             success: true,
             message: "successful",
             user: req.user,
+            cookies: req.cookies
         });
     }
 });
@@ -37,5 +35,9 @@ router.get(
         failureRedirect: "/login/failed",
     })
 );
+
+
+
+
 
 module.exports = router
