@@ -1,4 +1,3 @@
-
 const express = require('express');
 const userRouter = express.Router();
 const UserController = require('../controllers/userController');
@@ -8,11 +7,17 @@ const { upload } = require('../utils/firebase');
 //  Micro endPoints router
 userRouter.post('/checkBirthDate', UserController.checkBirthDate); // stage 1
 
-userRouter.post('/checkAvailableUsername', UserController.checkAvailableUsername);
+userRouter.post(
+  '/checkAvailableUsername',
+  UserController.checkAvailableUsername,
+);
 
 userRouter.post('/checkAvailableEmail', UserController.checkAvailableEmail); // stage 1
 
-userRouter.post('/checkExistedEmail', UserController.checkExistedEmail);
+userRouter.post(
+  '/ExistedEmailORusername',
+  UserController.ExistedEmailORusername,
+);
 
 userRouter.post('/signup', authController.signUp); // stage 1
 
@@ -30,14 +35,28 @@ userRouter.get('/profile/:username', UserController.getProfile);
 
 userRouter.post('/profile', UserController.updateProfile);
 
-userRouter.post('/profile/image', [authController.protect, upload.single('profile_image')], UserController.updateProfileImage);
+userRouter.post(
+  '/profile/image',
+  [authController.protect, upload.single('profile_image')],
+  UserController.updateProfileImage,
+);
 
-userRouter.post('/profile/banner', [authController.protect, upload.single('profile_banner')],UserController.updateProfileBanner);
+userRouter.post(
+  '/profile/banner',
+  [authController.protect, upload.single('profile_banner')],
+  UserController.updateProfileBanner,
+);
 
-userRouter.delete('/profile/image', authController.protect,UserController.deleteProfileImage);
+userRouter.delete(
+  '/profile/image',
+  authController.protect,
+  UserController.deleteProfileImage,
+);
 
-userRouter.delete('/profile/banner', authController.protect, UserController.deleteProfileBanner);
+userRouter.delete(
+  '/profile/banner',
+  authController.protect,
+  UserController.deleteProfileBanner,
+);
 
-module.exports = userRouter; 
-
-
+module.exports = userRouter;

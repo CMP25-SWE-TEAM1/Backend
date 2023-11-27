@@ -66,22 +66,29 @@ const UserController = {
     res.status(200).json({ message: 'Email is available' });
   }),
 
-  checkExistedEmail: catchAsync(async (req, res, next) => {
-    const { email } = req.body;
+  ExistedEmailORusername: catchAsync(async (req, res, next) => {
+    const { email, username } = req.body;
 
-    if (!email) {
+    if (!email && !username) {
       return res
         .status(400)
-        .json({ error: 'Email is required in the request body' });
+        .json({ error: 'Email or username is required in the request body' });
     }
 
-    const existingUser = await User.findOne({ email });
+    if (email) {
+      const existingUser = await User.findOne({ email });
 
-    if (existingUser) {
-      return res.status(200).json({ message: 'Email is existed' });
+      if (existingUser && existingUser.active) {
+        return res.status(200).json({ message: 'Email is existed' });
+      }
+    } else {
+      const existingUser = await User.findOne({ username });
+
+      if (existingUser && existingUser.active) {
+        return res.status(200).json({ message: 'username is existed' });
+      }
     }
-
-    res.status(404).json({ error: 'Email is not existed' });
+    res.status(404).json({ error: 'Email or username  not existed' });
   }),
 
   getProfile: async (req, res) => {
@@ -264,6 +271,7 @@ const UserController = {
       res.status(500).send({ error: 'Internal Server Error' });
     }
   },
+
   calculateAge: (birthDate) => {
     const today = new Date();
     const birthDateObj = new Date(birthDate);
