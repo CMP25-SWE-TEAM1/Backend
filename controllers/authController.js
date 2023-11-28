@@ -124,6 +124,12 @@ exports.login = catchAsync(async (req, res, next) => {
   // 2) Check if user exists && password is correct
   let user;
   if (email) {
+    // Check email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
+    }
+
     user = await User.findOne({ email }).select('+password');
   } else {
     user = await User.findOne({ username }).select('+password');
@@ -199,6 +205,13 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
     return next(new AppError('email and confirmEmailCode required', 400));
   }
   //const user = await User.findOne({ email,_bypassMiddleware:true }); //NOT WORKING YET to prevent the inacitve filter
+
+  // Check email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
+
   const user = await User.findOne({ email });
   if (!user || user.active) {
     return next(
@@ -242,7 +255,11 @@ exports.resendConfirmEmail = catchAsync(async (req, res, next) => {
   if (!email) {
     return next(new AppError('email and confirmEmailCode required', 400));
   }
-  console.log(email);
+  // Check email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: 'Invalid email format' });
+  }
   const user = await User.findOne({ email });
   if (!user || user.active) {
     return next(
