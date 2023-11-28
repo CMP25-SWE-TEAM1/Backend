@@ -38,11 +38,7 @@ const TweetController = {
         if (req.body.description) extractHashtags(newTweet);
       }
     } catch (err) {
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
@@ -77,12 +73,7 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
@@ -135,7 +126,6 @@ const TweetController = {
               },
             },
           ]);
-          console.log(retweet);
           if (retweet.length > 0) {
             tweet.isRetweeted = true;
           } else {
@@ -153,12 +143,7 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
@@ -220,19 +205,16 @@ const TweetController = {
         }
       }
     } catch (err) {
-      res.status(400).json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
   getTweetLikers: async (req, res) => {
     try {
       const tweet = await Tweet.findById(req.params.tweetId).select(
-        'likersList userId',
+        'likersList userId isDeleted',
       );
-      if (tweet === null || tweet.isDeleted) {
+      if (tweet === null || tweet.isDeleted === true) {
         res.status(404);
         res.json({
           status: 'Fail',
@@ -282,12 +264,7 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
@@ -390,7 +367,6 @@ const TweetController = {
               },
             },
           ]);
-          console.log(repliesList);
           const data = repliesList[0].paginatedResults;
           const totalCount =
             repliesList[0].totalCount.length > 0
@@ -407,12 +383,7 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 };
