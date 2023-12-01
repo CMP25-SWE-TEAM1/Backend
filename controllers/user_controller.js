@@ -110,10 +110,10 @@ exports.getProfile = async (req, res) => {
           followings_num: { $size: '$followingUsers' },
           followers_num: { $size: '$followersUsers' },
           isCurrUserBlocked: {
-            $in: [ currUser._id.toString(), '$blockingUsers']
+            $in: [currUser._id.toString(), '$blockingUsers']
           },
           isWantedUserFollowed: {
-            $in: [ currUser._id.toString(), '$followersUsers']
+            $in: [currUser._id.toString(), '$followersUsers']
           },
         }
       }
@@ -156,7 +156,7 @@ exports.getProfile = async (req, res) => {
   }
 };
 
-exports.getcurrUserProfile = async (req, res) => {
+exports.getCurrUserProfile = async (req, res) => {
   try {
     const currUser = req.user;
 
@@ -194,10 +194,21 @@ exports.updateProfile = async (req, res) => {
       return res.status(400).send({ error: 'Bad Request' });
     }
 
-    if (bio) req.user.bio = bio;
-    if (location) req.user.location = location;
-    if (website) req.user.website = website;
-    if (nickname) req.user.nickname = nickname;
+    const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
+    const test = urlRegex.test(url);
+
+    if (bio)
+      if (typeof bio === 'string' && bio.length <= 160) req.user.bio = bio;
+      else return res.status(400).send({ error: 'Bad Request, Bio must be string with maximum length 160'});
+    if (location)
+      if (location === 'string' && location.length <= 30) req.user.location = location;
+      else return res.status(400).send({ error: 'Bad Request, location must be string with maximum length 30'});      
+    if (website)
+      if (website === 'string' && website.length <= 30 && test) req.user.website = website;
+      else return res.status(400).send({ error: 'Bad Request, Unvalid Url'});      
+    if (nickname)
+      if (nickname === 'string' && nickname.length <= 50) req.user.nickname = nickname;
+      else return res.status(400).send({ error: 'Bad Request, Nickname must be string with maximum length 50'});
     if (birth_date) req.user.birthDate = new Date(birth_date);
 
     await req.user.save();
