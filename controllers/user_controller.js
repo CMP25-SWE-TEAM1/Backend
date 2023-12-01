@@ -213,7 +213,7 @@ exports.updateProfile = async (req, res) => {
       if (nickname === 'string' && nickname.length <= 50) req.user.nickname = nickname;
       else return res.status(400).send({ error: 'Bad Request, Nickname must be string with maximum length 50'});
     if (birth_date) 
-      if(isDate) req.user.birthDate = new Date(birth_date);
+      if(isDate) req.user.birthDate = birthDate;
       else res.status(400).send({ error: 'Bad Request, Send Valid Date'});
     await req.user.save();
 
