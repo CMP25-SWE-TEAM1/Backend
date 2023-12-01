@@ -195,7 +195,10 @@ exports.updateProfile = async (req, res) => {
     }
 
     const urlRegex = /^(https?|ftp):\/\/[^\s/$.?#].[^\s]*$/;
-    const test = urlRegex.test(url);
+    const validURL = urlRegex.test(url);
+
+    var birthDate = new Date(birth_date);
+    const isDate =  !isNaN(dateObj.getTime());
 
     if (bio)
       if (typeof bio === 'string' && bio.length <= 160) req.user.bio = bio;
@@ -204,13 +207,14 @@ exports.updateProfile = async (req, res) => {
       if (location === 'string' && location.length <= 30) req.user.location = location;
       else return res.status(400).send({ error: 'Bad Request, location must be string with maximum length 30'});      
     if (website)
-      if (website === 'string' && website.length <= 30 && test) req.user.website = website;
+      if (website === 'string' && website.length <= 30 && validURL) req.user.website = website;
       else return res.status(400).send({ error: 'Bad Request, Unvalid Url'});      
     if (nickname)
       if (nickname === 'string' && nickname.length <= 50) req.user.nickname = nickname;
       else return res.status(400).send({ error: 'Bad Request, Nickname must be string with maximum length 50'});
-    if (birth_date) req.user.birthDate = new Date(birth_date);
-
+    if (birth_date) 
+      if(isDate) req.user.birthDate = new Date(birth_date);
+      else res.status(400).send({ error: 'Bad Request, Send Valid Date'});
     await req.user.save();
 
     return res.status(204).end();
