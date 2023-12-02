@@ -7,7 +7,7 @@ const {
   getUserDatabyId,
   getTweetDatabyId,
   getRequiredTweetDatafromTweetObject,
-} = require('./tweetHelper');
+} = require('./tweet_helper');
 
 // handling hashtags and media
 const TweetController = {
@@ -16,9 +16,10 @@ const TweetController = {
       // req.body.userId = '65493dfd0e3d2798726f8f5b'; // will be updated according to auth
       req.body.userId = req.user._id;
       if (req.body.media == undefined && req.body.description == undefined) {
-        res.status(400).json({
+        res.status(400);
+        res.json({
           status: 'bad request',
-          message: err,
+          message: 'no media and no description',
         });
       } else {
         const newTweet = await Tweet.create(req.body);
@@ -28,20 +29,16 @@ const TweetController = {
         await User.findByIdAndUpdate(req.body.userId, {
           $push: { tweetList: { tweetId: retTweet.id, type: req.body.type } },
         });
-
-        res.status(201).json({
+        const data = retTweet;
+        res.status(201);
+        res.json({
           status: 'Tweet Add Success',
-          data: {
-            tweet: retTweet,
-          },
+          data,
         });
         if (req.body.description) extractHashtags(newTweet);
       }
     } catch (err) {
-      res.status(400).json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
@@ -76,20 +73,13 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
   getTweet: async (req, res) => {
     try {
-      // const tweet = await getTweetDatabyId(req.params.tweetId);
       const tweet = await getTweetDatabyId(req.params.tweetId);
-      // console.log(tweet);
       if (tweet === null) {
         res.status(404);
         res.json({
@@ -134,7 +124,6 @@ const TweetController = {
               },
             },
           ]);
-          console.log(retweet);
           if (retweet.length > 0) {
             tweet.isRetweeted = true;
           } else {
@@ -152,12 +141,7 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
@@ -219,19 +203,16 @@ const TweetController = {
         }
       }
     } catch (err) {
-      res.status(400).json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
   getTweetLikers: async (req, res) => {
     try {
       const tweet = await Tweet.findById(req.params.tweetId).select(
-        'likersList userId',
+        'likersList userId isDeleted',
       );
-      if (tweet === null || tweet.isDeleted) {
+      if (tweet === null || tweet.isDeleted === true) {
         res.status(404);
         res.json({
           status: 'Fail',
@@ -281,19 +262,14 @@ const TweetController = {
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 
   getTweetReplies: async (req, res) => {
     try {
       const tweet = await Tweet.findById(req.params.tweetId).select(
-        'likersList userId isDeleted',
+        'userId isDeleted',
       );
       if (tweet === null || tweet.isDeleted) {
         res.status(404);
@@ -351,6 +327,12 @@ const TweetController = {
               },
             },
             {
+              $project: {
+                likersList: 0,
+                retweetList: 0,
+              },
+            },
+            {
               $lookup: {
                 from: 'users',
                 let: { userId: '$userId' }, // Define a variable to store the value of the userId field
@@ -383,7 +365,6 @@ const TweetController = {
               },
             },
           ]);
-          console.log(repliesList);
           const data = repliesList[0].paginatedResults;
           const totalCount =
             repliesList[0].totalCount.length > 0
@@ -393,19 +374,14 @@ const TweetController = {
           res.status(200);
           res.json({
             status: 'Success',
-            message: 'Tweet Likers Get Success',
+            message: 'Tweet Replies Get Success',
             data,
           });
           return 1;
         }
       }
     } catch (err) {
-      console.log(err);
-      res.status(400);
-      res.json({
-        status: 'bad request',
-        message: err,
-      });
+      res.status(500).send({ error: 'Internal Server Error' });
     }
   },
 };

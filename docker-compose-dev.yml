@@ -1,0 +1,13 @@
+version: '3'
+services:
+  gigachat:
+    container_name: gigachat-backend-container
+    image: amreux1/my_public_registry:backend_image
+    build: 
+      context: .
+      target: development
+    env_file:
+      - config/dev.env
+    ports:
+      - 80:3000
+ 

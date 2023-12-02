@@ -1,13 +1,16 @@
+const dotenv = require('dotenv');
+dotenv.config({ path: './config/dev.env' });
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-require('./db/mongoose');
-const AppError = require('./utils/appError');
-const globalErrorHandler = require('./controllers/errorController');
-const userRouter = require('./routes/userRoutes');
-const tweetRouter = require('./routes/tweetRoutes');
-const HomepageRouter = require('./routes/homepage_router');
-const HashtagRouter = require('./routes/hashtag_router');
+const AppError = require('./utils/app_error');
+const globalErrorHandler = require('./controllers/error_controller');
+const userRouter = require('./routes/user_routes');
+const userProfileRouter = require('./routes/user_profile_router');
+const tweetRouter = require('./routes/tweet_routes');
+const homepageRouter = require('./routes/homepage_router');
+const hashtagRouter = require('./routes/hashtag_router');
+const mediaRouter = require('./routes/media_routes');
 
 const app = express();
 
@@ -29,9 +32,11 @@ app.use((req, res, next) => {
 //Routs
 
 app.use('/api/user', userRouter);
-app.use('/api/homepage', HomepageRouter);
-app.use('/api/trends', HashtagRouter);
+app.use('/api/homepage', homepageRouter);
+app.use('/api/trends', hashtagRouter);
 app.use('/api/tweets', tweetRouter);
+app.use('/api/:username', userProfileRouter);
+app.use('/api/media', mediaRouter);
 
 // Handling  Wrong Route Req.
 app.all('*', (req, res, next) => {
