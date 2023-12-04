@@ -13,17 +13,11 @@ userRouter.post('/confirmPassword',authController.protect, authController.confir
 //  Micro endPoints router
 userRouter.post('/checkBirthDate', userController.checkBirthDate); // stage 1
 
-userRouter.post(
-  '/checkAvailableUsername',
-  userController.checkAvailableUsername,
-);
+userRouter.post('/checkAvailableUsername', userController.checkAvailableUsername);
 
 userRouter.post('/checkAvailableEmail', userController.checkAvailableEmail); // stage 1
 
-userRouter.post(
-  '/existedEmailORusername',
-  userController.existedEmailORusername,
-);
+userRouter.post('/existedEmailORusername', userController.existedEmailORusername);
 
 userRouter.post('/signup', authController.signUp); // stage 1
 
@@ -38,14 +32,40 @@ userRouter.patch('/AssignPassword', authController.AssignPassword);
 userRouter.post('/login', authController.login);
 
 userRouter.post('/forgotpassword', authController.forgotPassword);
+userRouter.patch(
+  '/updateusername',
+  authController.protect,
+  authController.updateUsername,
+);
 
-userRouter.patch('/resetpassword', authController.resetPassword);
+userRouter.patch(
+  '/updatepassword',
+  authController.protect,
+  authController.updatePassword,
+);
+
+userRouter.get('/useremail', authController.protect, authController.userEmail);
+
+userRouter.post(
+  '/updateemail',
+  authController.protect,
+  authController.updateEmail,
+);
+
+userRouter.post(
+  '/verifyemail',
+  authController.protect,
+  authController.verifyEmail,
+);
 
 userRouter.get(
   '/profile/:username',
   authController.protect,
   userController.getProfile,
 );
+
+userRouter.patch('/resetpassword', authController.resetPassword);
+
 
 userRouter.get(
   '/profile',
