@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const uniqueSlug = require('unique-slug');
 const {promisify} = require('util'); //util.promisify
 const AppError = require('../utils/app_error');
@@ -80,7 +81,8 @@ exports.signUp = catchAsync(async (req, res, next) => {
         nickname: req.body.nickname,
         birthDate: req.body.birthDate,
         joinedAt: Date.now(),
-        profileImage: 'https://firebasestorage.googleapis.com/v0/b/gigachat-img.appspot.com/o/56931877-1025-4348-a329-663dadd37bba-black.jpg?alt=media&token=fca10f39-2996-4086-90db-0cd492a570f2',
+    profileImage:
+      'https://firebasestorage.googleapis.com/v0/b/gigachat-img.appspot.com/o/56931877-1025-4348-a329-663dadd37bba-black.jpg?alt=media&token=fca10f39-2996-4086-90db-0cd492a570f2',
     });
     // 2) Generate random code
     const confirmCode = newUser.createConfirmCode();
@@ -144,7 +146,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
     // 3) If everything ok, send token to client
     const token = signToken(user._id);
-    res.status(201).json({
+  res.status(200).json({
         token,
         status: 'success',
         data: {
@@ -161,7 +163,7 @@ exports.login = catchAsync(async (req, res, next) => {
                 joinedAt: user.joinedAt,
                 followings_num: user.followersUsers.length,
                 followers_num: user.followingUsers.length,
-            }
+      },
         },
     });
 });
@@ -190,9 +192,9 @@ exports.protect = catchAsync(async (req, res, next) => {
     //console.log(decode);//take alook at the shape of it
 
     // 3) Check if user still exists
-    // if the user deleted we no more need to send data
+  // if the user deleted or active we no more need to send data
     const currentUser = await User.findById(decoded.id);
-    if (!currentUser || !currentUser.active) {
+  if (!currentUser || !currentUser.active || currentUser.isDeleted) {
         return next(
             new AppError(
                 'The user belonging to this token does no longer exist.',
@@ -269,7 +271,7 @@ exports.confirmEmail = catchAsync(async (req, res, next) => {
 exports.resendConfirmEmail = catchAsync(async (req, res, next) => {
     const {email} = req.body;
     if (!email) {
-        return next(new AppError('email and confirmEmailCode required', 400));
+    return next(new AppError('email is required', 400));
     }
     // Check email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -430,6 +432,141 @@ exports.AssignPassword = catchAsync(async (req, res, next) => {
             message: ' user assign password correctly ',
         },
     });
+});
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  // 1) get the input data and check the validity
+  const { query } = req.body;
+
+
+  if (!query) {
+    return next(
+      new AppError('Email or username is required', 400),
+    );
+  }
+  //check if email or username
+  let email;
+  let username;
+  if (validator.isEmail(query)) {
+    email = query;
+  }
+  else{
+    username = query
+  }
+  let user;
+  if (email) {
+    user = await User.findOne({ email });
+    if (!user) {
+      return next(
+        new AppError('There is no user with this email address', 404),
+      );
+    }
+  } else {
+    user = await User.findOne({ username });
+    if (!user) {
+      return next(new AppError('There is no user with this username', 404));
+    }
+  }
+
+  // 2) generate random reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  // 3) email to the user with the new resetToken
+
+  // 3.1) generate email message
+  const message = `Reset your password?
+  If you requested a password reset for @${user.username}, use the confirmation code below to complete the process. If you didn't make this request, ignore this email.
+  ${resetToken}`;
+
+  // 3.2) sending the email
+  try {
+    // we use try catch to resend the email infail and not send the error to our golobal handler function
+    await sendEmail({
+      email: user.email,
+      subject: 'Your password reset token (valid for 10 min)',
+      message,
+    });
+
+    res.status(200).json({
+      status: 'success',
+      message: 'resetToken sent to user email address!',
+    });
+  } catch (err) {
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+
+    return next(
+      new AppError('There was an error sending the email. Try again later!'),
+      500,
+    );
+  }
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  // 1) check input data valididty
+  const { password, passwordResetToken } = req.body;
+
+  if (!password || !passwordResetToken) {
+    return next(
+      new AppError(
+        'the user should provide both, password and passwordResetToken',
+        400,
+      ),
+    );
+  }
+  if (password.length < 8) {
+    return next(new AppError('password should be at least 8 characters', 400));
+  }
+
+  // 2) get user based on the token
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(passwordResetToken)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }, //to check if the token expires or not
+  });
+
+  if (!user) {
+    return next(
+      new AppError('passwordResetToken is invalid or has expired', 400),
+    );
+  }
+
+  // 3) update user password and
+  user.password = password;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save(); // this will too trigger the pre save hook and update passwordChangedAt property
+
+  // 4) login the user and send nessesary profile data
+  const token = signToken(user._id);
+
+  res.status(200).json({
+    token,
+    status: 'success',
+    data: {
+      user: {
+        username: user.username,
+        nickname: user.nickname,
+        _id: user._id.toString(),
+        bio: user.bio,
+        profileImage: user.profileImage,
+        bannerImage: user.bannerImage,
+        location: user.location,
+        website: user.website,
+        birthDate: user.birthDate,
+        joinedAt: user.joinedAt,
+        followings_num: user.followersUsers.length,
+        followers_num: user.followingUsers.length,
+      },
+    },
+  });
 });
 
 exports.googleAuth = catchAsync(async (req, res, next) => {

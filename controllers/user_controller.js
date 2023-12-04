@@ -2,15 +2,12 @@ const express = require('express');
 const User = require('../models/user_model');
 const Media = require('../models/media_model');
 const { deleteMedia } = require('../controllers/media_controller');
-const Chat = require('../models/chat_model');
-const Message = require('../models/message_model');
-const mongoose = require('mongoose');
-
 const { bucket, uuidv4 } = require('../utils/firebase');
 const catchAsync = require('../utils/catch_async');
 
 const DEFAULT_IMAGE_URL =
   'https://firebasestorage.googleapis.com/v0/b/gigachat-img.appspot.com/o/56931877-1025-4348-a329-663dadd37bba-black.jpg?alt=media&token=fca10f39-2996-4086-90db-0cd492a570f2';
+
 
 exports.checkBirthDate = async (req, res) => {
   const { birthDate } = req.body;
@@ -69,32 +66,42 @@ exports.checkAvailableEmail = catchAsync(async (req, res, next) => {
   }
 
   res.status(200).json({ message: 'Email is available' });
-});
+}),
 
 exports.existedEmailORusername = catchAsync(async (req, res, next) => {
-  const { email, username } = req.body;
+    const { query } = req.body;
 
-  if (!email && !username) {
-    return res
-      .status(400)
-      .json({ error: 'Email or username is required in the request body' });
-  }
-
-  if (email) {
-    const existingUser = await User.findOne({ email });
-
-    if (existingUser && existingUser.active) {
-      return res.status(200).json({ message: 'Email is existed' });
+    if (!query) {
+      return res
+        .status(400)
+        .json({ error: 'Email or username is required in the request body' });
     }
-  } else {
-    const existingUser = await User.findOne({ username });
 
-    if (existingUser && existingUser.active) {
-      return res.status(200).json({ message: 'username is existed' });
+    //check if email or username
+    let email;
+    let username;
+    if(validator.isEmail(query)) {
+      email = query;
+    } else {
+      username = query;
     }
-  }
-  res.status(404).json({ error: 'Email or username  not existed' });
-});
+
+    if (email) {
+      const existingUser = await User.findOne({ email });
+
+      if (existingUser && existingUser.active) {
+        return res.status(200).json({ message: 'Email is existed' });
+      }
+    } else {
+      const existingUser = await User.findOne({ username });
+
+      if (existingUser && existingUser.active) {
+        return res.status(200).json({ message: 'username is existed' });
+      }
+    }
+    res.status(404).json({ error: 'Email or username  not existed' });
+  })
+
 
 exports.getProfile = async (req, res) => {
   try {
@@ -122,13 +129,13 @@ exports.getProfile = async (req, res) => {
           followings_num: { $size: '$followingUsers' },
           followers_num: { $size: '$followersUsers' },
           isCurrUserBlocked: {
-            $in: [currUser._id.toString(), '$blockingUsers'],
+            $in: [ currUser._id.toString(), '$blockingUsers']
           },
           isWantedUserFollowed: {
-            $in: [currUser._id.toString(), '$followersUsers'],
+            $in: [ currUser._id.toString(), '$followersUsers']
           },
-        },
-      },
+        }
+      }
     ]);
     const wantedUser = aggregateResult[0];
 
@@ -157,7 +164,7 @@ exports.getProfile = async (req, res) => {
       is_wanted_user_muted: isWantedUserMuted,
       is_curr_user_blocked: wantedUser.isCurrUserBlocked,
       is_wanted_user_followed: wantedUser.isWantedUserFollowed,
-      is_curr_user: isCurruser,
+      is_curr_user: isCurruser
     };
 
     return res.status(200).send(result);
@@ -224,52 +231,54 @@ exports.updateProfile = async (req, res) => {
 
 exports.updateProfileImage = async (req, res) => {
   try {
-    const { profile_image } = req.body;
 
-    if (!profile_image) return res.status(400).send({ error: 'Bad request' });
+    const { profile_image } = req.query;
+
+    if (!profile_image) return res.status(400).send({ error: "Bad request" });
 
     const media = await Media.findOne({ url: profile_image });
 
-    if (!media)
-      return res.status(404).send({ error: "The file doesn't exist" });
+    if (!media) return res.status(404).send({ error: "The file doesn't exist" });
 
     req.user.profileImage = profile_image;
 
     await req.user.save();
 
-    return res.status(204).end();
+    return res.status(204);
   } catch (error) {
     // Handle and log errors
     console.error(error.message);
     res.status(500).send({ error: 'Internal Server Error' });
   }
+
 };
 
 exports.updateProfileBanner = async (req, res) => {
   try {
-    const { profile_banner } = req.body;
+    const { banner_image } = req.query;
 
-    if (!profile_banner) return res.status(400).send({ error: 'Bad request' });
+    if (!banner_image) return res.status(400).send({ error: "Bad request" });
 
-    const media = await Media.findOne({ url: profile_banner });
+    const media = await Media.findOne({ url: banner_image });
 
-    if (!media)
-      return res.status(404).send({ error: "The file doesn't exist" });
+    if (!media) return res.status(404).send({ error: "The file doesn't exist" });
 
-    req.user.bannerImage = profile_banner;
+    req.user.bannerImage = banner_image;
 
     await req.user.save();
 
-    return res.status(204).end();
+    return res.status(204);
   } catch (error) {
     // Handle and log errors
     console.error(error.message);
     res.status(500).send({ error: 'Internal Server Error' });
   }
+
 };
 
 exports.deleteProfileImage = async (req, res) => {
   try {
+
     await deleteMedia(req.user.profileImage);
 
     req.user.profileImage = DEFAULT_IMAGE_URL;
@@ -291,6 +300,7 @@ exports.deleteProfileImage = async (req, res) => {
 
 exports.deleteProfileBanner = async (req, res) => {
   try {
+
     await deleteMedia(req.user.bannerImage);
 
     req.user.bannerImage = DEFAULT_IMAGE_URL;
@@ -560,5 +570,4 @@ function calculateAge(birthDate) {
   }
   return age;
 }
-
 exports.calculateAge = calculateAge;
