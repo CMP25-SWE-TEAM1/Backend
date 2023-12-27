@@ -206,19 +206,9 @@ async function deleteTweet(tweetData) {
   await Tweet.deleteOne(tweetData);
 }
 
-// beforeAll(async () => {
-//   try {
-//     const mongoServer = await MongoMemoryServer.create();
-//     await mongoose.connect(mongoServer.getUri());
-//   } catch (error) {
-//     console.error('Error during setup:', error);
-//   }
-// });
-
 afterAll(async () => {
   await mongoose.disconnect();
   await mongoose.connection.close();
-  return 1;
 });
 
 describe('Post /api/tweets/', () => {

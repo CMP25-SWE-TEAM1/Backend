@@ -31,8 +31,8 @@
 
 // describe('auth', () => {
 //   beforeAll(async () => {
-//     const mongoServer = await MongoMemoryServer.create();
-//     await mongoose.connect(mongoServer.getUri());
+//     // const mongoServer = await MongoMemoryServer.create();
+//     // await mongoose.connect(mongoServer.getUri());
 //     testUser = await createUser(testUserData);
 //   });
 

@@ -161,17 +161,20 @@
 
 // let token;
 // let testUser0;
+// let testUser1;
+
 // let testTweetOwner;
 // let testUserWithoutFollowing;
 // let testUserWithFollowingWithNoTweets;
+// let testFollowingUserWithoutTweetList;
 // async function createUser(userData) {
 //   let user = await new User(userData);
-//   return await user.save();
+//   return user;
 // }
 
 // async function createTweet(tweetData) {
 //   let tweet = await new Tweet(tweetData);
-//   return await tweet.save();
+//   return tweet;
 // }
 
 // async function deleteUser(userData) {
@@ -184,31 +187,57 @@
 
 // beforeAll(async () => {
 //   try {
-//     const mongoServer = await MongoMemoryServer.create();
-//     await mongoose.connect(mongoServer.getUri());
+//     // const mongoServer = await MongoMemoryServer.create();
+//     // await mongoose.connect(mongoServer.getUri());
 
+//     if (!process.argv.includes('--dev')) {
+//       const DB = 'mongodb://127.0.0.1:27017/GigaChatUnitTest';
+//       mongoose
+//         .connect(DB, {
+//           useNewUrlParser: true,
+//           useUnifiedTopology: true,
+//         })
+//         .then(() => console.log('DB connection successful!'))
+//         .catch((error) => {
+//           console.error('Error connecting to the database:', error);
+//         });
+//     }
 //     testTweetOwner = await createUser(tweetOwner);
 //     tweet.userId = testTweetOwner._id;
+
 //     testTweet = await createTweet(tweet);
+//     console.log('line1');
 //     user1.tweetList.push({ tweetId: testTweet._id, type: 'tweet' });
+//     console.log('line2');
+
 //     testUser1 = await createUser(user1);
+//     console.log('line3');
+
 //     user0.followingUsers.push(testUser1._id);
+//     console.log('line4');
 
 //     testUser0 = await createUser(user0);
+//     console.log('line5');
 
 //     testUserWithoutFollowing = await createUser(userWithoutFollowing);
+//     console.log('line6');
 
 //     testFollowingUserWithoutTweetList = await createUser(
 //       followingUserWithoutTweetList,
 //     );
+//     console.log('line7');
 
 //     userWithFollowingWithNoTweets.followingUsers.push(
 //       testFollowingUserWithoutTweetList._id,
 //     );
 
+//     console.log('line8');
+
 //     testUserWithFollowingWithNoTweets = await createUser(
 //       userWithFollowingWithNoTweets,
 //     );
+//     console.log('line9');
+
 //     // token = authController.signToken(testUser0._id.toString());
 //   } catch (error) {
 //     console.error('Error during setup:', error);
@@ -288,7 +317,7 @@
 //     jest
 //       .spyOn(mongoose.model('User'), 'aggregate')
 //       .mockImplementation(async () => new Error('Simulated error during save'));
-
+//     console.log(testUser0, 'loooooooooooool');
 //     token = jwt.sign({ id: testUser0._id.toString() }, process.env.JWT_SECRET, {
 //       expiresIn: process.env.JWT_EXPIRES_IN,
 //     });

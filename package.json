@@ -7,7 +7,7 @@
     "start:dev": "nodemon server.js -- --dev",
     "start:prod": "env-cmd -f ./config/prod.env NODE_ENV=production nodemon server.js",
     "debug": "ndb server.js",
-    "start:test": "jest",
+    "start:test": "jest --detectOpenHandles --forceExit",
     "test": "jest",
     "docs": "jsdoc -c jsdoc.json"
   },
@@ -27,6 +27,7 @@
     "jsonwebtoken": "^9.0.2",
     "mime": "^4.0.0",
     "moment": "^2.29.4",
+    "mongodb": "^6.3.0",
     "mongodb-memory-server": "^7.6.3",
     "mongoose": "^7.6.3",
     "morgan": "^1.10.0",

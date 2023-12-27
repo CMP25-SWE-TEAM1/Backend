@@ -16,14 +16,14 @@
 
 // let mongoServer; // Declare the variable to store the MongoDB memory server instance
 
-// beforeAll(async () => {
-//   try {
-//     mongoServer = await MongoMemoryServer.create();
-//     await mongoose.connect(mongoServer.getUri());
-//   } catch (error) {
-//     console.error('Error during setup:', error);
-//   }
-// });
+// // beforeAll(async () => {
+// //   try {
+// //     mongoServer = await MongoMemoryServer.create();
+// //     await mongoose.connect(mongoServer.getUri());
+// //   } catch (error) {
+// //     console.error('Error during setup:', error);
+// //   }
+// // });
 // beforeEach(async () => {
 //   await deleteAllHashtags();
 // });
@@ -34,7 +34,7 @@
 
 // afterAll(async () => {
 //   await mongoose.disconnect();
-//   await mongoServer.stop(); // Stop the MongoDB memory server
+//   await mongoose.connection.close();
 // });
 
 // describe('Testing Extract Hashtag Function', () => {

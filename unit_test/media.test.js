@@ -46,9 +46,9 @@
 
 // beforeAll(async () => {
 //   try {
-//     const mongoServer = await MongoMemoryServer.create();
+//     // const mongoServer = await MongoMemoryServer.create();
 
-//     await mongoose.connect(mongoServer.getUri());
+//     // await mongoose.connect(mongoServer.getUri());
 //     testUser = await createUser(userData);
 //     media = new Media({
 //       url: 'testUrl',
